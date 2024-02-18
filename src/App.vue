@@ -1,15 +1,35 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Welcome to Your Vue.js App" />
+  <div>
+    <router-view></router-view>
+    <div class="home">
+      <the-loader v-if="showLoading"></the-loader>
+    </div>
+  </div>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
+import TheLoader from "@/components/TheLoader.vue";
+import { ref } from "vue";
+import { mapState } from 'vuex';
 
 export default {
   name: "App",
+  computed: {
+    ...mapState({
+      showLoading: state => state.showLoading,
+    })
+  },
   components: {
-    HelloWorld,
+    TheLoader,
+  },
+  setup() {
+    const modalActive = ref(false);
+
+    const toggleModal = () => {
+      modalActive.value = !modalActive.value;
+    };
+
+    return { modalActive, toggleModal };
   },
 };
 </script>
