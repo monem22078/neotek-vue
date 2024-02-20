@@ -33,7 +33,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div><button class="submit-btn"  type="submit">submit</button></div>
+                        <div><button class="submit-btn" :disabled="buttonDisabled"  type="submit">submit</button></div>
                     </div>
                 </div>
             </form>
