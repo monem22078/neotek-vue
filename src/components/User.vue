@@ -9,19 +9,20 @@
                     <div class="card">
                         <h1>{{ user.firstName }} {{ user.lastName }}</h1>
                         <p class="title">{{user.email}}</p>
-                        <p>Revoke Reason: {{user.revokeReason}}</p>
+                        <p v-if="user.revokeReason">Revoke Reason: {{user.revokeReason}}</p>
                         <p>
                             <button v-if="user.file1" style="margin-right: 1%" class="btn btn-success" @click="download(user.file1, 'file_1')">Download File 1</button>
                             <button v-if="user.file2" style="margin-right: 1%" class="btn btn-success" @click="download(user.file2, 'file_2')">Download File 2</button>
                             <button v-if="user.file3" class="btn btn-success" @click="download(user.file3, 'file_3')">Download File 3</button>
                         </p>
                         <p><button v-if="!user.enabled" class="btn btn-primary" @click="approve(user.id)">Approve</button></p>
-                        <p><button v-if="user.enabled" class="btn btn-danger" @click="toggleModal">Revoke</button></p>
+                        <p><button v-if="user.status == 'pendding'" class="btn btn-danger" @click="toggleModal">Reject</button></p>
+                        <p><button v-if="user.enabled" class="btn btn-danger" @click="revoke(user.id)">Revoke</button></p>
                     </div>
                 </div>
         </div>
         <Modal @close="toggleModal" :modalActive="modalActive">
-            <form class="form-frame-wrapper" id="fileForm" method="POST" @submit.prevent="revoke(user.id)">
+            <form class="form-frame-wrapper" id="fileForm" method="POST" @submit.prevent="reject(user.id)">
 
                 <div class="row frame-3">
                     <div class="row">
@@ -36,8 +37,7 @@
                     </div>
                 </div>
             </form>
-        </Modal>
-        
+        </Modal>        
     </div>
 </template>
 <script>
@@ -63,6 +63,7 @@ export default {
             user: '',
             showModal: false,
             reason: '',
+            buttonDisabled: false
         }
     },
     methods: {
@@ -112,8 +113,17 @@ export default {
             };
 
             try {
+                await axios.request({
+                    method: 'put',
+                    maxBodyLength: Infinity,
+                    url: `http://localhost:3000/update-user/${id}?email=${this.user.email}`,
+                    data: {
+                        status: 'Approved',
+                    }
+                });
                 await axios.request(config);
                 this.user.enabled = true;
+                this.user.status = 'Approved'
                 this.$store.commit(LODING_SPINNER_SHOW_MUTATION, false, {root: true});
             } catch (err) {
                 this.$store.commit(LODING_SPINNER_SHOW_MUTATION, false, {root: true});
@@ -121,7 +131,7 @@ export default {
             }
         },
         async revoke(id) {
-            this.$store.commit(LODING_SPINNER_SHOW_MUTATION, true, {root: false});
+            this.$store.commit(LODING_SPINNER_SHOW_MUTATION, true, {root: true});
             let data = JSON.stringify({
                 "enabled": false
             });
@@ -140,16 +150,45 @@ export default {
                 await axios.request({
                     method: 'put',
                     maxBodyLength: Infinity,
-                    url: `http://localhost:3000/update-user/${id}`,
-                    data: {revokeReason: this.reason}
+                    url: `http://localhost:3000/update-user/${id}?email=${this.user.email}`,
+                    data: {
+                        status: 'Revoked',
+                    }
                 });
                 await axios.request(config);
                 this.modalActive = false;
                 this.user.enabled = false;
                 this.user.revokeReason = this.reason;
                 this.reason = '';
+                this.user.status = 'Revoked'
                 this.$store.commit(LODING_SPINNER_SHOW_MUTATION, false, {root: true});
             } catch (err) {
+                this.$store.commit(LODING_SPINNER_SHOW_MUTATION, false, {root: true});
+                console.log(err)
+            }
+        },
+        async reject(id) {
+            this.buttonDisabled = true;
+            this.$store.commit(LODING_SPINNER_SHOW_MUTATION, true, {root: true});
+            try {
+                await axios.request({
+                    method: 'put',
+                    maxBodyLength: Infinity,
+                    url: `http://localhost:3000/update-user/${id}?email=${this.user.email}`,
+                    data: {
+                        revokeReason: this.reason,
+                        status: 'Rejected',
+                    }
+                });
+                this.modalActive = false;
+                this.user.enabled = false;
+                this.user.revokeReason = this.reason;
+                this.reason = '';
+                this.user.status = 'Rejected'
+                this.buttonDisabled = false;
+                this.$store.commit(LODING_SPINNER_SHOW_MUTATION, false, {root: true});
+            } catch (err) {
+                this.buttonDisabled = false;
                 this.$store.commit(LODING_SPINNER_SHOW_MUTATION, false, {root: true});
                 console.log(err)
             }
@@ -193,13 +232,14 @@ export default {
         try {
             this.$store.commit(LODING_SPINNER_SHOW_MUTATION, true, {root: true});
             let response = await axios.request(config);
-            console.log(Object.keys(response.data).length);
             if (Object.keys(response.data).length != 0) {
                 this.user.revokeReason = response.data.data.revokereason;
                 this.user.file1 = response.data.data.file1;
                 this.user.file2 = response.data.data.file2;
                 this.user.file3 = response.data.data.file3;
+                this.user.status = response.data.data.status;
             }
+            console.log(this.user)
             this.$store.commit(LODING_SPINNER_SHOW_MUTATION, false, {root: true});
         } catch (err) {
             this.$store.commit(LODING_SPINNER_SHOW_MUTATION, false, {root: true});
