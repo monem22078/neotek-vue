@@ -11,9 +11,9 @@
                         <p class="title">{{user.email}}</p>
                         <p v-if="user.revokeReason">Revoke Reason: {{user.revokeReason}}</p>
                         <p>
-                            <button v-if="user.file1" style="margin-right: 1%" class="btn btn-success" @click="download(user.file1, 'file_1')">Download File 1</button>
-                            <button v-if="user.file2" style="margin-right: 1%" class="btn btn-success" @click="download(user.file2, 'file_2')">Download File 2</button>
-                            <button v-if="user.file3" class="btn btn-success" @click="download(user.file3, 'file_3')">Download File 3</button>
+                            <button v-if="user.file1" style="margin-right: 1%" class="btn btn-success" @click="download(user.file1, 'file_1')">SAMA LOA/LOI Letter</button>
+                            <button v-if="user.file2" style="margin-right: 1%" class="btn btn-success" @click="download(user.file2, 'file_2')">CR Certificate</button>
+                            <button v-if="user.file3" class="btn btn-success" @click="download(user.file3, 'file_3')">Saudi Payments Certificate</button>
                         </p>
                         <p><button v-if="!user.enabled" class="btn btn-primary" @click="approve(user.id)">Approve</button></p>
                         <p><button v-if="user.status == 'pendding'" class="btn btn-danger" @click="toggleModal">Reject</button></p>
@@ -116,7 +116,7 @@ export default {
                 await axios.request({
                     method: 'put',
                     maxBodyLength: Infinity,
-                    url: `http://localhost:3000/update-user/${id}?email=${this.user.email}`,
+                    url: `http://localhost:3000/update-user/${id}?email=${this.user.email}&userName=${this.user.firstName} ${this.user.lastName}`,
                     data: {
                         status: 'Approved',
                     }
@@ -150,7 +150,7 @@ export default {
                 await axios.request({
                     method: 'put',
                     maxBodyLength: Infinity,
-                    url: `http://localhost:3000/update-user/${id}?email=${this.user.email}`,
+                    url: `http://localhost:3000/update-user/${id}?email=${this.user.email}&userName=${this.user.firstName} ${this.user.lastName}`,
                     data: {
                         status: 'Revoked',
                     }
@@ -174,7 +174,7 @@ export default {
                 await axios.request({
                     method: 'put',
                     maxBodyLength: Infinity,
-                    url: `http://localhost:3000/update-user/${id}?email=${this.user.email}`,
+                    url: `http://localhost:3000/update-user/${id}?email=${this.user.email}&userName=${this.user.firstName} ${this.user.lastName}`,
                     data: {
                         revokeReason: this.reason,
                         status: 'Rejected',
